@@ -41,7 +41,12 @@ def _subject_with_re_prefix(subject: str) -> str:
 
 
 @cli.command()
-@click.option("--account", default="default", show_default=True, help="Account name")
+@click.option(
+    "--account",
+    default="default",
+    show_default=True,
+    help="Account name; when using --reply, must match the account in the mail's front matter",
+)
 @click.option(
     "--from",
     "from_addr",
@@ -111,6 +116,15 @@ def send(account: str, from_addr, to_addrs, subject, content_file, reply_file):
             reply_front, original_body = _parse_front_matter(Path(reply_file))
         except ValueError as e:
             click.echo(f"Error: {e}", err=True)
+            sys.exit(1)
+
+        # Validate account matches front matter
+        reply_account = reply_front.get("account")
+        if reply_account and reply_account != account:
+            click.echo(
+                f"Error: --account '{account}' does not match the account in the reply file's front matter '{reply_account}'.",
+                err=True,
+            )
             sys.exit(1)
 
         # Fill in subject and to from original mail if not provided

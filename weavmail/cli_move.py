@@ -23,17 +23,25 @@ def _safe_dirname(name: str) -> str:
 @click.argument("mail_file", metavar="MAIL_FILE")
 @click.argument("dst_mailbox", metavar="DST_MAILBOX")
 @click.option(
+    "--account",
+    default=None,
+    help="Expected account name; if provided, must match the account in the mail's front matter",
+)
+@click.option(
     "--sync-limit",
     default=_DEFAULT_SYNC_LIMIT,
     show_default=True,
     type=int,
     help="Limit for the follow-up sync on the source mailbox",
 )
-def move(mail_file: str, dst_mailbox: str, sync_limit: int):
+def move(mail_file: str, dst_mailbox: str, account: str | None, sync_limit: int):
     """Move a mail to another mailbox, then sync the source mailbox.
 
     MAIL_FILE is the local .md file path.
     DST_MAILBOX is the destination mailbox name on the server.
+
+    The account is read from the mail file's front matter. Use --account to
+    verify it matches an expected value; an error is raised if they differ.
     """
     src_path = Path(mail_file)
     if not src_path.exists():
@@ -51,13 +59,22 @@ def move(mail_file: str, dst_mailbox: str, sync_limit: int):
         sys.exit(1)
     front: dict = yaml.safe_load(parts[1])
 
-    account = front.get("account")
+    front_account = front.get("account")
     src_mailbox = front.get("mailbox")
     uid = str(front.get("uid", ""))
 
-    if not account or not src_mailbox or not uid:
+    if not front_account or not src_mailbox or not uid:
         click.echo("Error: front matter missing account, mailbox or uid.", err=True)
         sys.exit(1)
+
+    if account is not None and account != front_account:
+        click.echo(
+            f"Error: --account '{account}' does not match the account in front matter '{front_account}'.",
+            err=True,
+        )
+        sys.exit(1)
+
+    account = front_account
 
     accounts = load_accounts()
     if account not in accounts:
