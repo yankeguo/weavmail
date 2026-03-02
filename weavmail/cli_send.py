@@ -1,6 +1,5 @@
 import smtplib
 import sys
-from email.headerregistry import Address
 from email.message import EmailMessage
 from pathlib import Path
 
