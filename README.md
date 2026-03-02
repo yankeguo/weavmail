@@ -1,4 +1,4 @@
-# weavmail
+# weavMail
 
 A command-line email client designed for AI agents.
 
