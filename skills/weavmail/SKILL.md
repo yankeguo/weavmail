@@ -33,6 +33,15 @@ weavmail account config \
 
 `--username` and `--password` set both IMAP and SMTP credentials at once. The account name defaults to `default` and can be omitted from all subsequent commands.
 
+`--addresses` is a comma-separated list of email addresses that are authorized as senders for this account (e.g. `--addresses you@example.com,alias@example.com`). All addresses listed here can be used as the `--from` address when sending mail.
+
+To view the current configuration of an account, run `account config` without any options:
+
+```bash
+weavmail account config        # show default account
+weavmail account config work   # show account named "work"
+```
+
 ---
 
 ## Sync Inbox
