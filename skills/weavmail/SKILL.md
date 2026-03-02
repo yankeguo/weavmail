@@ -129,6 +129,20 @@ To delete a mail, move it to the Trash folder. The exact name varies by provider
 
 ---
 
+## Trash a Mail
+
+Move an email to the account's trash mailbox, then automatically sync the source mailbox:
+
+```bash
+weavmail trash mails/default_INBOX/12345.md
+```
+
+The trash mailbox is read from the account's `--trash-mailbox` configuration. An error is raised if `--trash-mailbox` is not configured for the account.
+
+The source mailbox is synced after the move — the local file will be deleted automatically.
+
+---
+
 ## Send a Mail
 
 Write the body to a file, then send:
@@ -191,4 +205,4 @@ weavmail mailbox --account work
 weavmail send --account work --to someone@example.com --subject "Hi" --content /tmp/body.txt
 ```
 
-For `move` and `send --reply`, the account is read from the mail file's front matter — no `--account` flag needed. You may pass `--account` as a safeguard: if it doesn't match the account in the front matter, the command will exit with an error.
+For `move`, `trash`, and `send --reply`, the account is read from the mail file's front matter — no `--account` flag needed. You may pass `--account` as a safeguard: if it doesn't match the account in the front matter, the command will exit with an error.
