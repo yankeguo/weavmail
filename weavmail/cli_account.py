@@ -103,6 +103,16 @@ def account_config(
     save_accounts(accounts)
     click.echo(f"Account '{name}' saved.")
 
+    # Print all configured parameters; mask password values
+    _MASKED = {"imap_password", "smtp_password"}
+    for key, value in data.items():
+        if value is None:
+            continue
+        if key in _MASKED:
+            click.echo(f"  {key}: ********")
+        else:
+            click.echo(f"  {key}: {value}")
+
     missing = _missing_params(data)
     if missing:
         click.echo(f"Warning: incomplete configuration, missing: {', '.join(missing)}")
