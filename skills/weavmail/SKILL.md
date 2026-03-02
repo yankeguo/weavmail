@@ -41,20 +41,30 @@ weavmail account config --password new-password
 
 `--addresses` is a comma-separated list of email addresses that are authorized as senders for this account (e.g. `--addresses you@example.com,alias@example.com`). All addresses listed here can be used as the `--from` address when sending mail.
 
-`--sent-mailbox` and `--trash-mailbox` are optional but recommended. After configuring an account, **automatically run `weavmail mailbox` to list all folders**, identify which ones are the Sent and Trash folders (names vary by provider, e.g. `Sent`, `Sent Messages`, `[Gmail]/Sent Mail`, `Trash`, `Deleted Messages`, `[Gmail]/Trash`), then save them:
-
-```bash
-weavmail account config --sent-mailbox "Sent" --trash-mailbox "Trash"
-```
-
-If neither can be identified with confidence, skip and leave them unset — both fields are optional and do not affect other functionality.
-
 To view the current configuration of an account, run `account config` without any options:
 
 ```bash
 weavmail account config        # show default account
 weavmail account config work   # show account named "work"
 ```
+
+---
+
+### After Configuring an Account
+
+**After any account is configured, always run the following automatically:**
+
+```bash
+weavmail mailbox
+```
+
+Inspect the output and identify the Sent and Trash folders (names vary by provider, e.g. `Sent`, `Sent Messages`, `[Gmail]/Sent Mail`, `Trash`, `Deleted Messages`, `[Gmail]/Trash`). Then save them to the account config:
+
+```bash
+weavmail account config --sent-mailbox "Sent" --trash-mailbox "Trash"
+```
+
+Both fields are optional — if neither can be identified with confidence, skip this step. They do not affect other functionality when unset.
 
 ---
 
