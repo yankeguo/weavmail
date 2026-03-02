@@ -4,7 +4,7 @@ from pathlib import Path
 
 import click
 import yaml
-from imap_tools import MailBox
+from imap_tools import MailBox, MailMessageFlags
 
 from .cli import cli
 from .config import load_accounts
@@ -84,6 +84,7 @@ def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
 
             content = f"---\n{yaml_block}\n---\n\n{body.strip()}\n"
             out_file.write_text(content, encoding="utf-8")
+            mb.flag([uid], [MailMessageFlags.SEEN], True)
             click.echo(
                 f"[mail saved]\n"
                 f"  file:    {out_file}\n"
