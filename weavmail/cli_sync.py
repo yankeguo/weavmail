@@ -18,24 +18,8 @@ def _safe_dirname(name: str) -> str:
     return re.sub(r"[^\w\-.]", "_", name)
 
 
-@cli.command()
-@click.option("--account", default="default", show_default=True, help="Account name")
-@click.option(
-    "--mailbox",
-    "mailbox_name",
-    default="INBOX",
-    show_default=True,
-    help="Mailbox folder",
-)
-@click.option(
-    "--limit",
-    default=10,
-    show_default=True,
-    type=int,
-    help="Max number of emails to fetch",
-)
-def sync(account: str, mailbox_name: str, limit: int):
-    """Sync mails from a mailbox and save as Markdown files"""
+def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
+    """Core sync logic, reusable by other commands."""
     accounts = load_accounts()
     if account not in accounts:
         click.echo(f"Error: Account '{account}' not found.", err=True)
@@ -86,6 +70,8 @@ def sync(account: str, mailbox_name: str, limit: int):
             # Build YAML front matter
             front: dict = {
                 "uid": uid,
+                "account": account,
+                "mailbox": mailbox_name,
                 "subject": msg.subject,
                 "from": msg.from_,
                 "to": list(msg.to),
@@ -104,3 +90,24 @@ def sync(account: str, mailbox_name: str, limit: int):
                 f"  from:    {msg.from_}\n"
                 f"  subject: {msg.subject}\n"
             )
+
+
+@cli.command()
+@click.option("--account", default="default", show_default=True, help="Account name")
+@click.option(
+    "--mailbox",
+    "mailbox_name",
+    default="INBOX",
+    show_default=True,
+    help="Mailbox folder",
+)
+@click.option(
+    "--limit",
+    default=10,
+    show_default=True,
+    type=int,
+    help="Max number of emails to fetch",
+)
+def sync(account: str, mailbox_name: str, limit: int):
+    """Sync mails from a mailbox and save as Markdown files"""
+    sync_mailbox(account, mailbox_name, limit)
