@@ -46,25 +46,31 @@ def test_create_new_account_all_params(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     runner = CliRunner()
 
-    # Provide values for all 9 prompts in order:
-    # imap_host, imap_username, imap_password, smtp_host, smtp_username,
-    # smtp_password, imap_port, smtp_port, addresses
     result = runner.invoke(
         cli,
-        ["account", "config", "myaccount"],
-        input="\n".join(
-            [
-                "imap.example.com",  # imap_host
-                "user@example.com",  # imap_username
-                "imapsecret",  # imap_password
-                "smtp.example.com",  # smtp_host
-                "user@example.com",  # smtp_username
-                "smtpsecret",  # smtp_password
-                "993",  # imap_port
-                "587",  # smtp_port
-                "user@example.com, alias@example.com",  # addresses
-            ]
-        ),
+        [
+            "account",
+            "config",
+            "myaccount",
+            "--imap-host",
+            "imap.example.com",
+            "--imap-port",
+            "993",
+            "--imap-username",
+            "user@example.com",
+            "--imap-password",
+            "imapsecret",
+            "--smtp-host",
+            "smtp.example.com",
+            "--smtp-port",
+            "587",
+            "--smtp-username",
+            "user@example.com",
+            "--smtp-password",
+            "smtpsecret",
+            "--addresses",
+            "user@example.com, alias@example.com",
+        ],
     )
     assert result.exit_code == 0, result.output
 
@@ -83,7 +89,7 @@ def test_create_new_account_all_params(tmp_path, monkeypatch):
 
 
 def test_update_existing_account_partial(tmp_path, monkeypatch):
-    """5.2 - Pressing Enter keeps existing values; new values overwrite."""
+    """5.2 - Only provided options are updated; omitted options keep existing values."""
     monkeypatch.chdir(tmp_path)
     _write_accounts(
         tmp_path,
@@ -102,24 +108,10 @@ def test_update_existing_account_partial(tmp_path, monkeypatch):
         },
     )
     runner = CliRunner()
-    # Change only imap_host; leave everything else blank (keep existing).
+    # Change only imap_host; all other fields should be preserved.
     result = runner.invoke(
         cli,
-        ["account", "config", "myaccount"],
-        input="\n".join(
-            [
-                "imap.new.com",  # imap_host – changed
-                "",  # imap_username – keep
-                "",  # imap_password – keep
-                "",  # smtp_host – keep
-                "",  # smtp_username – keep
-                "",  # smtp_password – keep
-                "",  # imap_port – keep
-                "",  # smtp_port – keep
-                "",  # addresses – keep
-                "",  # trailing newline to avoid EOF abort
-            ]
-        ),
+        ["account", "config", "myaccount", "--imap-host", "imap.new.com"],
     )
     assert result.exit_code == 0, result.output
 
@@ -138,7 +130,7 @@ def test_update_existing_account_partial(tmp_path, monkeypatch):
 def test_account_list_complete_and_incomplete(tmp_path, monkeypatch):
     """5.3 - list shows [complete] and [incomplete] with missing fields."""
     monkeypatch.chdir(tmp_path)
-    full_account = {p: "val" for p in ACCOUNT_PARAMS}
+    full_account: dict = {p: "val" for p in ACCOUNT_PARAMS}
     full_account["imap_port"] = 993
     full_account["smtp_port"] = 587
     full_account["addresses"] = ["a@b.com"]
@@ -202,8 +194,7 @@ def test_default_account_name(tmp_path, monkeypatch):
     runner = CliRunner()
     result = runner.invoke(
         cli,
-        ["account", "config"],  # no name argument
-        input="\n".join(["imap.example.com", "", "", "", "", "", "", "", "", ""]),
+        ["account", "config", "--imap-host", "imap.example.com"],
     )
     assert result.exit_code == 0, result.output
     accounts = _read_accounts(tmp_path)

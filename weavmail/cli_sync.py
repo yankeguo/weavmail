@@ -1,41 +1,21 @@
-import re
-import sys
 from pathlib import Path
 
 import click
-import yaml
 from imap_tools import MailBox, MailMessageFlags
 
+import yaml
+
 from .cli import cli
-from .config import load_accounts
-
-# IMAP required fields for sync
-_REQUIRED = ["imap_host", "imap_port", "imap_username", "imap_password"]
-
-
-def _safe_dirname(name: str) -> str:
-    """Replace characters that are unsafe in directory/file names."""
-    return re.sub(r"[^\w\-.]", "_", name)
+from .config import IMAP_REQUIRED, load_account, require_account_fields, safe_dirname
 
 
 def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
     """Core sync logic, reusable by other commands."""
-    accounts = load_accounts()
-    if account not in accounts:
-        click.echo(f"Error: Account '{account}' not found.", err=True)
-        sys.exit(1)
-
-    data = accounts[account]
-    missing = [p for p in _REQUIRED if not data.get(p)]
-    if missing:
-        click.echo(
-            f"Error: Account '{account}' is incomplete, missing: {', '.join(missing)}",
-            err=True,
-        )
-        sys.exit(1)
+    data = load_account(account)
+    require_account_fields(account, data, IMAP_REQUIRED)
 
     # Prepare output directory: ./mails/<account>_<mailbox>/
-    dir_name = f"{_safe_dirname(account)}_{_safe_dirname(mailbox_name)}"
+    dir_name = f"{safe_dirname(account)}_{safe_dirname(mailbox_name)}"
     output_dir = Path("mails") / dir_name
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -98,21 +78,21 @@ def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
     "--account",
     default="default",
     show_default=True,
-    help="Account name to sync, as configured via 'weavmail account config'",
+    help="Account name to sync",
 )
 @click.option(
     "--mailbox",
     "mailbox_name",
     default="INBOX",
     show_default=True,
-    help="IMAP mailbox folder to sync, e.g. INBOX or INBOX/Sent",
+    help="IMAP mailbox folder to sync, e.g. INBOX",
 )
 @click.option(
     "--limit",
     default=10,
     show_default=True,
     type=int,
-    help="Maximum number of most-recent emails to fetch from the server",
+    help="Maximum number of most-recent emails to fetch",
 )
 def sync(account: str, mailbox_name: str, limit: int):
     """Sync mails from an IMAP mailbox to local Markdown files.
