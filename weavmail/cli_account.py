@@ -74,6 +74,16 @@ def account_list():
     "--smtp-password", default=None, help="SMTP login password or app-specific password"
 )
 @click.option(
+    "--username",
+    default=None,
+    help="Set both imap-username and smtp-username in one option",
+)
+@click.option(
+    "--password",
+    default=None,
+    help="Set both imap-password and smtp-password in one option",
+)
+@click.option(
     "--addresses",
     default=None,
     help="Comma-separated list of email addresses associated with this account, used as valid sender addresses",
@@ -88,6 +98,8 @@ def account_config(
     smtp_port,
     smtp_username,
     smtp_password,
+    username,
+    password,
     addresses,
 ):
     """Create or update an account configuration.
@@ -96,6 +108,9 @@ def account_config(
     provided will be updated; omitted options keep their existing values.
     Port fields default to TLS standard values (IMAP: 993, SMTP: 465) only
     when first creating the account.
+
+    Use --username / --password as shorthand to set both IMAP and SMTP
+    credentials at once. Explicit --imap-* / --smtp-* options take precedence.
     """
     accounts = load_accounts()
     data: dict = accounts.get(name, {})
@@ -108,8 +123,12 @@ def account_config(
         data["imap_port"] = IMAP_DEFAULT_PORT
     if imap_username is not None:
         data["imap_username"] = imap_username
+    elif username is not None:
+        data["imap_username"] = username
     if imap_password is not None:
         data["imap_password"] = imap_password
+    elif password is not None:
+        data["imap_password"] = password
     if smtp_host is not None:
         data["smtp_host"] = smtp_host
     if smtp_port is not None:
@@ -118,8 +137,12 @@ def account_config(
         data["smtp_port"] = SMTP_DEFAULT_PORT
     if smtp_username is not None:
         data["smtp_username"] = smtp_username
+    elif username is not None:
+        data["smtp_username"] = username
     if smtp_password is not None:
         data["smtp_password"] = smtp_password
+    elif password is not None:
+        data["smtp_password"] = password
     if addresses is not None:
         data["addresses"] = [a.strip() for a in addresses.split(",") if a.strip()]
 

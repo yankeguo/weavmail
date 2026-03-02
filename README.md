@@ -22,11 +22,9 @@ uv tool install weavmail
 # Configure an account (named "default")
 weavmail account config \
   --imap-host imap.gmail.com \
-  --imap-username you@gmail.com \
-  --imap-password your-app-password \
   --smtp-host smtp.gmail.com \
-  --smtp-username you@gmail.com \
-  --smtp-password your-app-password \
+  --username you@gmail.com \
+  --password your-app-password \
   --addresses you@gmail.com
 
 # Sync the inbox
@@ -61,9 +59,11 @@ weavmail account delete NAME
 | `--smtp-port` | SMTP port (default: 465, SMTPS/TLS) |
 | `--smtp-username` | SMTP login username |
 | `--smtp-password` | SMTP login password |
+| `--username` | Set both `imap-username` and `smtp-username` at once |
+| `--password` | Set both `imap-password` and `smtp-password` at once |
 | `--addresses` | Comma-separated list of sender addresses |
 
-`NAME` defaults to `"default"`. Only specified options are updated; omitted ones keep their existing values.
+`NAME` defaults to `"default"`. Only specified options are updated; omitted ones keep their existing values. Explicit `--imap-*` / `--smtp-*` options take precedence over `--username` / `--password`.
 
 ---
 
