@@ -4,6 +4,11 @@ A command-line email client designed for AI agents.
 
 `weavmail` syncs emails from IMAP mailboxes to local Markdown files, and provides commands to list mailboxes, move messages, and send or reply to emails — all from the shell.
 
+> **AI Agent Skill available** — install the weavmail skill for your AI agent with one command:
+> ```bash
+> npx skills add -a openclaw https://github.com/yankeguo/weavmail/tree/main/skills/weavmail
+> ```
+
 ## Installation
 
 ```bash
