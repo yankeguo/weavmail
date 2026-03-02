@@ -93,21 +93,31 @@ def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
 
 
 @cli.command()
-@click.option("--account", default="default", show_default=True, help="Account name")
+@click.option(
+    "--account",
+    default="default",
+    show_default=True,
+    help="Account name to sync, as configured via 'weavmail account config'",
+)
 @click.option(
     "--mailbox",
     "mailbox_name",
     default="INBOX",
     show_default=True,
-    help="Mailbox folder",
+    help="IMAP mailbox folder to sync, e.g. INBOX or INBOX/Sent",
 )
 @click.option(
     "--limit",
     default=10,
     show_default=True,
     type=int,
-    help="Max number of emails to fetch",
+    help="Maximum number of most-recent emails to fetch from the server",
 )
 def sync(account: str, mailbox_name: str, limit: int):
-    """Sync mails from a mailbox and save as Markdown files"""
+    """Sync mails from an IMAP mailbox to local Markdown files.
+
+    Fetches up to --limit most-recent messages and saves each as a .md file
+    under ./mails/<account>_<mailbox>/. Files that already exist are skipped.
+    Local files whose UID no longer exists on the server are deleted.
+    """
     sync_mailbox(account, mailbox_name, limit)

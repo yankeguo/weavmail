@@ -38,27 +38,45 @@ def account_list():
 
 
 @account.command("config")
-@click.argument("name", default="default")
-@click.option("--imap-host", default=None, help="IMAP server hostname")
+@click.argument("name", default="default", metavar="NAME")
+@click.option(
+    "--imap-host", default=None, help="IMAP server hostname, e.g. imap.gmail.com"
+)
 @click.option(
     "--imap-port",
     default=None,
     type=int,
-    help=f"IMAP server port (default: {IMAP_DEFAULT_PORT})",
+    help=f"IMAP server port, defaults to {IMAP_DEFAULT_PORT} (IMAPS/TLS) on first creation",
 )
-@click.option("--imap-username", default=None, help="IMAP username")
-@click.option("--imap-password", default=None, help="IMAP password")
-@click.option("--smtp-host", default=None, help="SMTP server hostname")
+@click.option(
+    "--imap-username",
+    default=None,
+    help="IMAP login username, usually the full email address",
+)
+@click.option(
+    "--imap-password", default=None, help="IMAP login password or app-specific password"
+)
+@click.option(
+    "--smtp-host", default=None, help="SMTP server hostname, e.g. smtp.gmail.com"
+)
 @click.option(
     "--smtp-port",
     default=None,
     type=int,
-    help=f"SMTP server port (default: {SMTP_DEFAULT_PORT})",
+    help=f"SMTP server port, defaults to {SMTP_DEFAULT_PORT} (SMTPS/TLS) on first creation",
 )
-@click.option("--smtp-username", default=None, help="SMTP username")
-@click.option("--smtp-password", default=None, help="SMTP password")
 @click.option(
-    "--addresses", default=None, help="Comma-separated list of email addresses"
+    "--smtp-username",
+    default=None,
+    help="SMTP login username, usually the full email address",
+)
+@click.option(
+    "--smtp-password", default=None, help="SMTP login password or app-specific password"
+)
+@click.option(
+    "--addresses",
+    default=None,
+    help="Comma-separated list of email addresses associated with this account, used as valid sender addresses",
 )
 def account_config(
     name: str,
@@ -72,7 +90,13 @@ def account_config(
     smtp_password,
     addresses,
 ):
-    """Create or update an account configuration"""
+    """Create or update an account configuration.
+
+    NAME is the account identifier (default: "default"). Only the options
+    provided will be updated; omitted options keep their existing values.
+    Port fields default to TLS standard values (IMAP: 993, SMTP: 465) only
+    when first creating the account.
+    """
     accounts = load_accounts()
     data: dict = accounts.get(name, {})
 
@@ -119,9 +143,12 @@ def account_config(
 
 
 @account.command("delete")
-@click.argument("name")
+@click.argument("name", metavar="NAME")
 def account_delete(name: str):
-    """Delete an account"""
+    """Delete an account configuration.
+
+    NAME is the account identifier to remove.
+    """
     accounts = load_accounts()
     if name not in accounts:
         click.echo(f"Error: Account '{name}' not found.", err=True)

@@ -8,9 +8,18 @@ from .config import load_accounts
 
 
 @cli.command()
-@click.option("--account", default="default", show_default=True, help="Account name")
+@click.option(
+    "--account",
+    default="default",
+    show_default=True,
+    help="Account name to connect with, as configured via 'weavmail account config'",
+)
 def mailbox(account: str):
-    """List mailboxes for an account"""
+    """List all mailbox folders for an account.
+
+    Connects to the IMAP server and prints the name of every folder
+    available in the account.
+    """
     accounts = load_accounts()
     if account not in accounts:
         click.echo(f"Error: Account '{account}' not found.", err=True)
