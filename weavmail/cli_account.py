@@ -88,6 +88,16 @@ def account_list():
     default=None,
     help="Comma-separated list of email addresses associated with this account, used as valid sender addresses",
 )
+@click.option(
+    "--sent-mailbox",
+    default=None,
+    help="Mailbox name to save sent mail to, e.g. 'Sent' or '[Gmail]/Sent Mail'",
+)
+@click.option(
+    "--trash-mailbox",
+    default=None,
+    help="Mailbox name for trash, e.g. 'Trash' or '[Gmail]/Trash'",
+)
 def account_config(
     name: str,
     imap_host,
@@ -101,6 +111,8 @@ def account_config(
     username,
     password,
     addresses,
+    sent_mailbox,
+    trash_mailbox,
 ):
     """Create or update an account configuration.
 
@@ -145,6 +157,10 @@ def account_config(
         data["smtp_password"] = password
     if addresses is not None:
         data["addresses"] = [a.strip() for a in addresses.split(",") if a.strip()]
+    if sent_mailbox is not None:
+        data["sent_mailbox"] = sent_mailbox
+    if trash_mailbox is not None:
+        data["trash_mailbox"] = trash_mailbox
 
     accounts[name] = data
     save_accounts(accounts)

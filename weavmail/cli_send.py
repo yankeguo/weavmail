@@ -5,6 +5,7 @@ from pathlib import Path
 
 import click
 import yaml
+from imap_tools import MailBox, MailMessageFlags
 
 from .cli import cli
 from .config import load_accounts
@@ -71,11 +72,29 @@ def _subject_with_re_prefix(subject: str) -> str:
     type=click.Path(exists=True),
     help="Local .md file to reply to",
 )
-def send(account: str, from_addr, to_addrs, subject, content_file, reply_file):
+@click.option(
+    "--no-save-sent",
+    is_flag=True,
+    default=False,
+    help="Skip saving sent mail to the Sent mailbox (use for providers that auto-save, e.g. Gmail)",
+)
+def send(
+    account: str,
+    from_addr,
+    to_addrs,
+    subject,
+    content_file,
+    reply_file,
+    no_save_sent,
+):
     """Send a mail or reply to an existing mail.
 
     Basic send:   --to addr --subject "Hello" --content body.txt\n
     Reply:        --reply mails/default_INBOX/123.md --content reply.txt
+
+    After sending, the mail is appended to the Sent mailbox via IMAP unless
+    --no-save-sent is set. The Sent mailbox name can be configured on the
+    account (sent_mailbox field) or overridden with --sent-mailbox.
     """
     accounts = load_accounts()
     if account not in accounts:
@@ -201,3 +220,28 @@ def send(account: str, from_addr, to_addrs, subject, content_file, reply_file):
         f"  to:      {', '.join(to_addrs)}\n"
         f"  subject: {subject}\n"
     )
+
+    # Append to Sent mailbox via IMAP unless disabled
+    if not no_save_sent:
+        target_sent = data.get("sent_mailbox")
+        if target_sent:
+            _REQUIRED_IMAP = [
+                "imap_host",
+                "imap_port",
+                "imap_username",
+                "imap_password",
+            ]
+            missing_imap = [p for p in _REQUIRED_IMAP if not data.get(p)]
+            if missing_imap:
+                click.echo(
+                    f"Warning: cannot save to Sent mailbox, missing IMAP config: {', '.join(missing_imap)}",
+                    err=True,
+                )
+            else:
+                with MailBox(data["imap_host"], port=data["imap_port"]).login(
+                    data["imap_username"], data["imap_password"], initial_folder=None
+                ) as mb:
+                    mb.append(
+                        msg.as_bytes(), target_sent, flag_set=[MailMessageFlags.SEEN]
+                    )
+                click.echo(f"[mail saved to sent]\n  mailbox: {target_sent}\n")
