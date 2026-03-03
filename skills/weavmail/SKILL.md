@@ -158,7 +158,7 @@ weavmail send \
   --content /tmp/body.txt
 ```
 
-`--to` is repeatable for multiple recipients. `--from` defaults to the first configured address.
+`--to`, `--cc`, and `--bcc` are all repeatable for multiple recipients. `--from` defaults to the first configured address.
 
 ---
 

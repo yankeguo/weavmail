@@ -48,6 +48,8 @@ def _reply_subject(subject: str) -> str:
 @click.option(
     "--to", "to_addrs", multiple=True, help="Recipient address(es), repeatable"
 )
+@click.option("--cc", "cc_addrs", multiple=True, help="CC address(es), repeatable")
+@click.option("--bcc", "bcc_addrs", multiple=True, help="BCC address(es), repeatable")
 @click.option("--subject", default=None, help="Mail subject")
 @click.option(
     "--content",
@@ -73,6 +75,8 @@ def send(
     account: str,
     from_addr,
     to_addrs,
+    cc_addrs,
+    bcc_addrs,
     subject,
     content_file,
     reply_file,
@@ -166,6 +170,10 @@ def send(
     msg = EmailMessage()
     msg["From"] = from_addr
     msg["To"] = ", ".join(to_addrs)
+    if cc_addrs:
+        msg["Cc"] = ", ".join(cc_addrs)
+    if bcc_addrs:
+        msg["Bcc"] = ", ".join(bcc_addrs)
     msg["Subject"] = subject
     msg.set_content(full_body)
 
@@ -185,7 +193,9 @@ def send(
         f"[mail sent]\n"
         f"  from:    {from_addr}\n"
         f"  to:      {', '.join(to_addrs)}\n"
-        f"  subject: {subject}\n"
+        + (f"  cc:      {', '.join(cc_addrs)}\n" if cc_addrs else "")
+        + (f"  bcc:     {', '.join(bcc_addrs)}\n" if bcc_addrs else "")
+        + f"  subject: {subject}\n"
     )
 
     # Append to Sent mailbox via IMAP unless disabled or not configured
