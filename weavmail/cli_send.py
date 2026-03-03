@@ -171,12 +171,7 @@ def send(
 
     # Set reply headers
     if reply_front is not None:
-        original_headers = reply_front.get("headers") or {}
-        message_id = original_headers.get("message-id") or original_headers.get(
-            "Message-ID"
-        )
-        if isinstance(message_id, (list, tuple)):
-            message_id = message_id[0]
+        message_id = reply_front.get("message_id")
         if message_id:
             msg["In-Reply-To"] = message_id
             msg["References"] = message_id

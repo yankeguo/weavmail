@@ -59,6 +59,11 @@ def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
                 "date": msg.date_str,
                 "flags": list(msg.flags),
             }
+            message_id = msg.headers.get("message-id")
+            if message_id:
+                front["message_id"] = (
+                    message_id[0] if isinstance(message_id, list) else message_id
+                )
             yaml_block = yaml.dump(front, allow_unicode=True, sort_keys=False).rstrip()
             body = msg.text or msg.html or ""
 
