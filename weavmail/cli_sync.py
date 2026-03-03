@@ -1,9 +1,8 @@
 from pathlib import Path
 
 import click
-from imap_tools import MailBox, MailMessageFlags
-
 import yaml
+from imap_tools import MailBox, MailMessageFlags
 
 from .cli import cli
 from .config import IMAP_REQUIRED, load_account, require_account_fields, safe_dirname
@@ -61,9 +60,7 @@ def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
             }
             message_id = msg.headers.get("message-id")
             if message_id:
-                front["message_id"] = (
-                    message_id[0] if isinstance(message_id, list) else message_id
-                )
+                front["message_id"] = message_id[0]
             yaml_block = yaml.dump(front, allow_unicode=True, sort_keys=False).rstrip()
             body = msg.text or msg.html or ""
 
