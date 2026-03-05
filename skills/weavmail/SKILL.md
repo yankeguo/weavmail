@@ -133,13 +133,14 @@ To delete a mail, move it to the Trash folder. The exact name varies by provider
 
 ## Trash a Mail
 
-Move an email to the account's trash mailbox, then automatically sync the source mailbox:
+Move one or more emails to the account's trash mailbox, then automatically sync the source mailbox:
 
 ```bash
 weavmail trash mails/default_INBOX/12345.md
+weavmail trash mails/default_INBOX/12345.md mails/default_INBOX/67890.md
 ```
 
-The trash mailbox is read from the account's `--trash-mailbox` configuration. An error is raised if `--trash-mailbox` is not configured for the account.
+Multiple `MAIL_FILE` arguments can be passed for batch operations. The trash mailbox is read from each mail's account `--trash-mailbox` configuration. An error is raised if `--trash-mailbox` is not configured for the account.
 
 The source mailbox is synced after the move — the local file will be deleted automatically.
 
@@ -147,13 +148,14 @@ The source mailbox is synced after the move — the local file will be deleted a
 
 ## Archive a Mail
 
-Move an email to the account's archive mailbox, then automatically sync the source mailbox:
+Move one or more emails to the account's archive mailbox, then automatically sync the source mailbox:
 
 ```bash
 weavmail archive mails/default_INBOX/12345.md
+weavmail archive mails/default_INBOX/12345.md mails/default_INBOX/67890.md
 ```
 
-The archive mailbox is read from the account's `--archive-mailbox` configuration. An error is raised if `--archive-mailbox` is not configured for the account.
+Multiple `MAIL_FILE` arguments can be passed for batch operations. The archive mailbox is read from each mail's account `--archive-mailbox` configuration. An error is raised if `--archive-mailbox` is not configured for the account.
 
 The source mailbox is synced after the move — the local file will be deleted automatically.
 
@@ -224,4 +226,4 @@ weavmail send --account work --to someone@example.com --subject "Hi" --content /
 
 `weavmail sync` without `--account` syncs **all** configured accounts automatically.
 
-For `move`, `trash`, `archive`, and `send --reply`, the account is read from the mail file's front matter — no `--account` flag needed. You may pass `--account` as a safeguard: if it doesn't match the account in the front matter, the command will exit with an error.
+For `move` and `send --reply`, the account is read from the mail file's front matter — you may pass `--account` as a safeguard: if it doesn't match the account in the front matter, the command will exit with an error. For `trash` and `archive`, the account is always read from each mail file's front matter (no `--account` option).

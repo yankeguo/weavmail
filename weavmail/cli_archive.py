@@ -16,11 +16,12 @@ _DEFAULT_SYNC_LIMIT = 10
 
 
 @cli.command()
-@click.argument("mail_file", metavar="MAIL_FILE")
-@click.option(
-    "--account",
-    default=None,
-    help="Expected account name; must match the account in the mail's front matter if provided",
+@click.argument(
+    "mail_files",
+    nargs=-1,
+    required=True,
+    type=click.Path(exists=True),
+    metavar="MAIL_FILE [MAIL_FILE ...]",
 )
 @click.option(
     "--sync-limit",
@@ -29,68 +30,72 @@ _DEFAULT_SYNC_LIMIT = 10
     type=int,
     help="Limit for the follow-up sync on the source mailbox",
 )
-def archive(mail_file: str, account: str | None, sync_limit: int):
-    """Move a mail to the account's configured archive mailbox, then sync.
+def archive(mail_files: tuple[str, ...], sync_limit: int):
+    """Move mails to the account's configured archive mailbox, then sync.
 
-    MAIL_FILE is the local .md file path.
+    MAIL_FILE is the local .md file path. Multiple files can be passed for batch
+    operations.
 
-    The archive mailbox is read from the account's archive_mailbox setting.
-    An error is raised if archive_mailbox is not configured for the account.
+    The archive mailbox is read from each mail's account archive_mailbox setting.
+    An error is raised if archive_mailbox is not configured for any account.
 
-    Use --account to verify the mail belongs to the expected account.
+    Account is read from each mail file's front matter.
     """
-    src_path = Path(mail_file)
-    if not src_path.exists():
-        click.echo(f"Error: file not found: {src_path}", err=True)
-        raise SystemExit(1)
+    records: list[tuple[Path, str, str, str, str]] = []
 
-    front, _ = parse_front_matter(src_path)
+    for f in mail_files:
+        src_path = Path(f)
+        front, _ = parse_front_matter(src_path)
 
-    front_account = front.get("account")
-    src_mailbox = front.get("mailbox")
-    uid = str(front.get("uid", ""))
+        front_account = front.get("account")
+        src_mailbox = front.get("mailbox")
+        uid = str(front.get("uid", ""))
 
-    if not front_account or not src_mailbox or not uid:
-        click.echo(
-            f"Error: {src_path}: front matter missing account, mailbox, or uid.",
-            err=True,
-        )
-        raise SystemExit(1)
+        if not front_account or not src_mailbox or not uid:
+            click.echo(
+                f"Error: {src_path}: front matter missing account, mailbox, or uid.",
+                err=True,
+            )
+            raise SystemExit(1)
 
-    if account is not None and account != front_account:
-        click.echo(
-            f"Error: --account '{account}' does not match front matter account '{front_account}'.",
-            err=True,
-        )
-        raise SystemExit(1)
+        data = load_account(front_account)
+        require_account_fields(front_account, data, IMAP_REQUIRED)
 
-    account = front_account
-    assert account is not None
+        dst_mailbox = data.get("archive_mailbox")
+        if not dst_mailbox:
+            click.echo(
+                f"Error: Account '{front_account}' does not have archive_mailbox configured. "
+                f"Run `weavmail mailbox --account {front_account}` to list available folders, "
+                f"then `weavmail account config {front_account} --archive-mailbox <MAILBOX>` to set it.",
+                err=True,
+            )
+            raise SystemExit(1)
 
-    data = load_account(account)
-    require_account_fields(account, data, IMAP_REQUIRED)
+        records.append((src_path, front_account, src_mailbox, uid, dst_mailbox))
 
-    dst_mailbox = data.get("archive_mailbox")
-    if not dst_mailbox:
-        click.echo(
-            f"Error: Account '{account}' does not have archive_mailbox configured. "
-            f"Run `weavmail mailbox --account {account}` to list available folders, "
-            f"then `weavmail account config {account} --archive-mailbox <MAILBOX>` to set it.",
-            err=True,
-        )
-        raise SystemExit(1)
+    groups: dict[tuple[str, str], list[tuple[Path, str, str]]] = {}
+    for src_path, account, src_mailbox, uid, dst_mailbox in records:
+        key = (account, src_mailbox)
+        if key not in groups:
+            groups[key] = []
+        groups[key].append((src_path, uid, dst_mailbox))
 
-    with MailBox(data["imap_host"], port=data["imap_port"]).login(
-        data["imap_username"], data["imap_password"], initial_folder=src_mailbox
-    ) as mb:
-        mb.move(uid, dst_mailbox)
+    for (account, src_mailbox), items in groups.items():
+        data = load_account(account)
+        dst_mailbox = items[0][2]
 
-    click.echo(
-        f"[mail moved to archive]\n"
-        f"  file:            {src_path}\n"
-        f"  src mailbox:     {src_mailbox}\n"
-        f"  archive mailbox: {dst_mailbox}\n"
-    )
+        with MailBox(data["imap_host"], port=data["imap_port"]).login(
+            data["imap_username"], data["imap_password"], initial_folder=src_mailbox
+        ) as mb:
+            for src_path, uid, _ in items:
+                mb.move(uid, dst_mailbox)
 
-    click.echo(f"[syncing source mailbox: {src_mailbox}]")
-    sync_mailbox(account, src_mailbox, sync_limit)
+        label = "mail" if len(items) == 1 else f"{len(items)} mail(s)"
+        click.echo(f"[{label} moved to archive]")
+        for src_path, _, _ in items:
+            click.echo(f"  file:            {src_path}")
+        click.echo(f"  src mailbox:     {src_mailbox}")
+        click.echo(f"  archive mailbox: {dst_mailbox}")
+
+        click.echo(f"[syncing source mailbox: {src_mailbox}]")
+        sync_mailbox(account, src_mailbox, sync_limit)
