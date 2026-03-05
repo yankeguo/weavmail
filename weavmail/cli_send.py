@@ -198,21 +198,23 @@ def send(
         + f"  subject: {subject}\n"
     )
 
-    # Append to Sent mailbox via IMAP unless disabled or not configured
+    # Append to Sent mailbox via IMAP unless disabled
     if not no_save_sent:
         target_sent = data.get("sent_mailbox")
-        if target_sent:
-            missing_imap = [p for p in IMAP_REQUIRED if not data.get(p)]
-            if missing_imap:
-                click.echo(
-                    f"Warning: cannot save to Sent mailbox, missing IMAP config: {', '.join(missing_imap)}",
-                    err=True,
-                )
-            else:
-                with MailBox(data["imap_host"], port=data["imap_port"]).login(
-                    data["imap_username"], data["imap_password"], initial_folder=None
-                ) as mb:
-                    mb.append(
-                        msg.as_bytes(), target_sent, flag_set=[MailMessageFlags.SEEN]
-                    )
-                click.echo(f"[mail saved to sent]\n  mailbox: {target_sent}\n")
+        if not target_sent:
+            click.echo(
+                f"Error: Account '{account}' does not have sent_mailbox configured. "
+                f"Run `weavmail mailbox --account {account}` to list available folders, "
+                f"then `weavmail account config {account} --sent-mailbox <MAILBOX>` to set it, "
+                f"or pass --no-save-sent to skip saving.",
+                err=True,
+            )
+            raise SystemExit(1)
+        require_account_fields(account, data, IMAP_REQUIRED)
+        with MailBox(data["imap_host"], port=data["imap_port"]).login(
+            data["imap_username"], data["imap_password"], initial_folder=None
+        ) as mb:
+            mb.append(
+                msg.as_bytes(), target_sent, flag_set=[MailMessageFlags.SEEN]
+            )
+        click.echo(f"[mail saved to sent]\n  mailbox: {target_sent}\n")

@@ -73,7 +73,9 @@ def archive(mail_file: str, account: str | None, sync_limit: int):
     dst_mailbox = data.get("archive_mailbox")
     if not dst_mailbox:
         click.echo(
-            f"Error: Account '{account}' does not have archive_mailbox configured.",
+            f"Error: Account '{account}' does not have archive_mailbox configured. "
+            f"Run `weavmail mailbox --account {account}` to list available folders, "
+            f"then `weavmail account config {account} --archive-mailbox <MAILBOX>` to set it.",
             err=True,
         )
         raise SystemExit(1)
