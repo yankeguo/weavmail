@@ -61,10 +61,10 @@ weavmail mailbox
 Inspect the output and identify the Sent and Trash folders (names vary by provider, e.g. `Sent`, `Sent Messages`, `[Gmail]/Sent Mail`, `Trash`, `Deleted Messages`, `[Gmail]/Trash`). Then save them to the account config:
 
 ```bash
-weavmail account config --sent-mailbox "Sent" --trash-mailbox "Trash"
+weavmail account config --sent-mailbox "Sent" --trash-mailbox "Trash" --archive-mailbox "Archive"
 ```
 
-Both fields are optional — if neither can be identified with confidence, skip this step. They do not affect other functionality when unset.
+All three fields are optional — if any cannot be identified with confidence, skip it. They do not affect other functionality when unset.
 
 ---
 
@@ -145,6 +145,20 @@ The source mailbox is synced after the move — the local file will be deleted a
 
 ---
 
+## Archive a Mail
+
+Move an email to the account's archive mailbox, then automatically sync the source mailbox:
+
+```bash
+weavmail archive mails/default_INBOX/12345.md
+```
+
+The archive mailbox is read from the account's `--archive-mailbox` configuration. An error is raised if `--archive-mailbox` is not configured for the account.
+
+The source mailbox is synced after the move — the local file will be deleted automatically.
+
+---
+
 ## Send a Mail
 
 Write the body to a file, then send:
@@ -210,4 +224,4 @@ weavmail send --account work --to someone@example.com --subject "Hi" --content /
 
 `weavmail sync` without `--account` syncs **all** configured accounts automatically.
 
-For `move`, `trash`, and `send --reply`, the account is read from the mail file's front matter — no `--account` flag needed. You may pass `--account` as a safeguard: if it doesn't match the account in the front matter, the command will exit with an error.
+For `move`, `trash`, `archive`, and `send --reply`, the account is read from the mail file's front matter — no `--account` flag needed. You may pass `--account` as a safeguard: if it doesn't match the account in the front matter, the command will exit with an error.

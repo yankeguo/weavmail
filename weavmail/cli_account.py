@@ -80,6 +80,11 @@ def account_list():
     default=None,
     help="Trash mailbox name, e.g. 'Trash' or '[Gmail]/Trash'",
 )
+@click.option(
+    "--archive-mailbox",
+    default=None,
+    help="Archive mailbox name, e.g. 'Archive' or '[Gmail]/All Mail'",
+)
 def account_config(
     name,
     imap_host,
@@ -95,6 +100,7 @@ def account_config(
     addresses,
     sent_mailbox,
     trash_mailbox,
+    archive_mailbox,
 ):
     """Create or update an account configuration.
 
@@ -148,6 +154,8 @@ def account_config(
         data["sent_mailbox"] = sent_mailbox
     if trash_mailbox is not None:
         data["trash_mailbox"] = trash_mailbox
+    if archive_mailbox is not None:
+        data["archive_mailbox"] = archive_mailbox
 
     accounts[name] = data
     save_accounts(accounts)
