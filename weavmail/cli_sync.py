@@ -7,6 +7,8 @@ from imap_tools import MailBox, MailMessageFlags
 from .cli import cli
 from .config import IMAP_REQUIRED, load_account, load_accounts, require_account_fields, safe_dirname
 
+_OPTIONAL_MAILBOXES = ("sent_mailbox", "trash_mailbox", "archive_mailbox")
+
 
 def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
     """Core sync logic, reusable by other commands."""
@@ -105,3 +107,15 @@ def sync(account: str | None, mailbox_name: str, limit: int):
 
     for acct in accounts:
         sync_mailbox(acct, mailbox_name, limit)
+        data = load_account(acct)
+        missing_mailboxes = [
+            f"--{f.replace('_', '-')}"
+            for f in _OPTIONAL_MAILBOXES
+            if not data.get(f)
+        ]
+        if missing_mailboxes:
+            click.echo(
+                f"Hint: account '{acct}' is missing {', '.join(missing_mailboxes)}. "
+                f"Run `weavmail mailbox --account {acct}` to list available folders, "
+                f"then set the appropriate options with `weavmail account config {acct}`."
+            )
