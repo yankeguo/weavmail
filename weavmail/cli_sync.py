@@ -23,21 +23,14 @@ def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
     with MailBox(data["imap_host"], port=data["imap_port"]).login(
         data["imap_username"], data["imap_password"], initial_folder=mailbox_name
     ) as mb:
-        # Collect all remote UIDs
-        remote_uids = set(mb.uids())
-
-        # Remove local files whose UID no longer exists on the server
-        for local_file in output_dir.glob("*.md"):
-            if local_file.stem not in remote_uids:
-                local_file.unlink()
-                click.echo(f"[mail deleted]\n  file: {local_file}\n")
-
-        # Fetch latest emails (limited) and save them
+        # Fetch latest emails (limited) and save them, collecting fetched UIDs
+        fetched_uids: set[str] = set()
         for msg in mb.fetch(limit=limit, reverse=True, mark_seen=False):
             uid = msg.uid
             if not uid:
                 continue
 
+            fetched_uids.add(uid)
             out_file = output_dir / f"{uid}.md"
 
             # Build YAML front matter
@@ -67,6 +60,11 @@ def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
                 f"  from:    {msg.from_}\n"
                 f"  subject: {msg.subject}\n"
             )
+
+        # Remove local files whose UID was not returned by this fetch
+        for local_file in output_dir.glob("*.md"):
+            if local_file.stem not in fetched_uids:
+                local_file.unlink()
 
 
 @cli.command()
