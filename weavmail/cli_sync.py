@@ -5,7 +5,7 @@ import yaml
 from imap_tools import MailBox, MailMessageFlags
 
 from .cli import cli
-from .config import IMAP_REQUIRED, load_account, require_account_fields, safe_dirname
+from .config import IMAP_REQUIRED, load_account, load_accounts, require_account_fields, safe_dirname
 
 
 def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
@@ -30,21 +30,13 @@ def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
                 local_file.unlink()
                 click.echo(f"[mail deleted]\n  file: {local_file}\n")
 
-        # Fetch latest emails (limited) and save new ones
+        # Fetch latest emails (limited) and save them
         for msg in mb.fetch(limit=limit, reverse=True, mark_seen=False):
             uid = msg.uid
             if not uid:
                 continue
 
             out_file = output_dir / f"{uid}.md"
-            if out_file.exists():
-                click.echo(
-                    f"[mail already existed]\n"
-                    f"  file:    {out_file}\n"
-                    f"  from:    {msg.from_}\n"
-                    f"  subject: {msg.subject}\n"
-                )
-                continue
 
             # Build YAML front matter
             front: dict = {
@@ -78,9 +70,8 @@ def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
 @cli.command()
 @click.option(
     "--account",
-    default="default",
-    show_default=True,
-    help="Account name to sync",
+    default=None,
+    help="Comma-separated account names to sync (default: all accounts)",
 )
 @click.option(
     "--mailbox",
@@ -96,11 +87,21 @@ def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
     type=int,
     help="Maximum number of most-recent emails to fetch",
 )
-def sync(account: str, mailbox_name: str, limit: int):
+def sync(account: str | None, mailbox_name: str, limit: int):
     """Sync mails from an IMAP mailbox to local Markdown files.
 
     Fetches up to --limit most-recent messages and saves each as a .md file
-    under ./mails/<account>_<mailbox>/. Files that already exist are skipped.
-    Local files whose UID no longer exists on the server are deleted.
+    under ./mails/<account>_<mailbox>/. Local files whose UID no longer exists
+    on the server are deleted.
     """
-    sync_mailbox(account, mailbox_name, limit)
+    if account:
+        accounts = [a.strip() for a in account.split(",") if a.strip()]
+    else:
+        accounts = list(load_accounts().keys())
+
+    if not accounts:
+        click.echo("Error: no accounts configured.", err=True)
+        raise SystemExit(1)
+
+    for acct in accounts:
+        sync_mailbox(acct, mailbox_name, limit)

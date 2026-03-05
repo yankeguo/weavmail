@@ -10,7 +10,7 @@ metadata:
   }
 ---
 
-`weavmail` is a command-line email client designed for AI agents. Use it to read, send, reply to, and organize emails.
+# `weavmail` is a command-line email client designed for AI agents. Use it to read, send, reply to, and organize emails
 
 ## Setup
 
@@ -77,10 +77,12 @@ weavmail sync
 ```
 
 Options:
+
+- `--account NAMES` — comma-separated account names to sync (default: all configured accounts)
 - `--mailbox FOLDER` — sync a different folder (default: `INBOX`)
 - `--limit N` — number of most-recent messages to fetch (default: `10`)
 
-Each email is saved to `./mails/default_INBOX/<uid>.md` with YAML front matter:
+Each email is saved to `./mails/<account>_<mailbox>/<uid>.md` with YAML front matter:
 
 ```yaml
 ---
@@ -201,8 +203,11 @@ Then pass `--account` to any command to target that account:
 
 ```bash
 weavmail sync --account work
+weavmail sync --account work,personal   # sync multiple accounts at once
 weavmail mailbox --account work
 weavmail send --account work --to someone@example.com --subject "Hi" --content /tmp/body.txt
 ```
+
+`weavmail sync` without `--account` syncs **all** configured accounts automatically.
 
 For `move`, `trash`, and `send --reply`, the account is read from the mail file's front matter — no `--account` flag needed. You may pass `--account` as a safeguard: if it doesn't match the account in the front matter, the command will exit with an error.
