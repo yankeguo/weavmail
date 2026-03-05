@@ -173,6 +173,18 @@ def account_config(
     if absent:
         click.echo(f"Warning: incomplete configuration, missing: {', '.join(absent)}")
 
+    missing_mailboxes = [
+        f"--{f.replace('_', '-')}"
+        for f in ("sent_mailbox", "trash_mailbox", "archive_mailbox")
+        if not data.get(f)
+    ]
+    if missing_mailboxes:
+        click.echo(
+            f"Hint: {', '.join(missing_mailboxes)} not configured. "
+            f"Run `weavmail mailbox` to list available folders, "
+            f"then set the appropriate options with `weavmail account config {name}`."
+        )
+
 
 @account.command("delete")
 @click.argument("name", metavar="NAME")
