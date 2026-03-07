@@ -64,13 +64,19 @@ Inspect the output and identify the Sent and Trash folders (names vary by provid
 weavmail account config --sent-mailbox "Sent" --trash-mailbox "Trash" --archive-mailbox "Archive"
 ```
 
-All three fields are optional — if any cannot be identified with confidence, skip it. They do not affect other functionality when unset.
+To sync Spam (or other folders) in addition to INBOX, configure `--sync-mailboxes`:
+
+```bash
+weavmail account config --sync-mailboxes "INBOX,Spam"
+```
+
+All these fields are optional — if any cannot be identified with confidence, skip it. They do not affect other functionality when unset.
 
 ---
 
-## Sync Inbox
+## Sync Mail
 
-Fetch the latest emails from INBOX and save them as local Markdown files:
+Fetch the latest emails and save them as local Markdown files. Sync uses all configured accounts and each account's `sync_mailboxes` config (default: `INBOX`):
 
 ```bash
 weavmail sync
@@ -78,9 +84,13 @@ weavmail sync
 
 Options:
 
-- `--account NAMES` — comma-separated account names to sync (default: all configured accounts)
-- `--mailbox FOLDER` — sync a different folder (default: `INBOX`)
-- `--limit N` — number of most-recent messages to fetch (default: `10`)
+- `--limit N` — number of most-recent messages to fetch per mailbox (default: `10`)
+
+To include Spam (or other folders) in the default sync, run:
+
+```bash
+weavmail account config --sync-mailboxes "INBOX,Spam"
+```
 
 Each email is saved to `./mails/<account>_<mailbox>/<uid>.md` with YAML front matter:
 
@@ -215,15 +225,13 @@ weavmail account config work \
   --addresses you@work.com
 ```
 
-Then pass `--account` to any command to target that account:
+Pass `--account` to target a specific account where supported:
 
 ```bash
-weavmail sync --account work
-weavmail sync --account work,personal   # sync multiple accounts at once
 weavmail mailbox --account work
 weavmail send --account work --to someone@example.com --subject "Hi" --content /tmp/body.txt
 ```
 
-`weavmail sync` without `--account` syncs **all** configured accounts automatically.
+`weavmail sync` always syncs **all** configured accounts using each account's `sync_mailboxes` config.
 
 For `move` and `send --reply`, the account is read from the mail file's front matter — you may pass `--account` as a safeguard: if it doesn't match the account in the front matter, the command will exit with an error. For `trash` and `archive`, the account is always read from each mail file's front matter (no `--account` option).

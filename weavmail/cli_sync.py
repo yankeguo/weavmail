@@ -69,43 +69,32 @@ def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
 
 @cli.command()
 @click.option(
-    "--account",
-    default=None,
-    help="Comma-separated account names to sync (default: all accounts)",
-)
-@click.option(
-    "--mailbox",
-    "mailbox_name",
-    default="INBOX",
-    show_default=True,
-    help="IMAP mailbox folder to sync, e.g. INBOX",
-)
-@click.option(
     "--limit",
     default=10,
     show_default=True,
     type=int,
-    help="Maximum number of most-recent emails to fetch",
+    help="Maximum number of most-recent emails to fetch per mailbox",
 )
-def sync(account: str | None, mailbox_name: str, limit: int):
-    """Sync mails from an IMAP mailbox to local Markdown files.
+def sync(limit: int):
+    """Sync mails from IMAP mailbox(es) to local Markdown files.
 
-    Fetches up to --limit most-recent messages and saves each as a .md file
-    under ./mails/<account>_<mailbox>/. Local files whose UID no longer exists
-    on the server are deleted.
+    Uses all configured accounts and each account's sync_mailboxes config
+    (default: INBOX). Fetches up to --limit most-recent messages and saves each
+    as a .md file under ./mails/<account>_<mailbox>/. Local files whose UID no
+    longer exists on the server are deleted.
     """
-    if account:
-        accounts = [a.strip() for a in account.split(",") if a.strip()]
-    else:
-        accounts = list(load_accounts().keys())
-
+    accounts = list(load_accounts().keys())
     if not accounts:
         click.echo("Error: no accounts configured.", err=True)
         raise SystemExit(1)
 
     for acct in accounts:
-        sync_mailbox(acct, mailbox_name, limit)
         data = load_account(acct)
+        mailboxes = data.get("sync_mailboxes") or ["INBOX"]
+        if not mailboxes:
+            mailboxes = ["INBOX"]
+        for mb in mailboxes:
+            sync_mailbox(acct, mb, limit)
         missing_mailboxes = [
             f"--{f.replace('_', '-')}"
             for f in _OPTIONAL_MAILBOXES

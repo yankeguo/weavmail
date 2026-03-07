@@ -8,7 +8,7 @@ Before proceeding, load the `weavmail` skill by reading `SKILL.md` in the same d
 
 ## Step 1: Sync all accounts
 
-Run `weavmail sync` without any `--account` argument to fetch the latest emails from INBOX across all configured accounts:
+Run `weavmail sync` to fetch the latest emails from each account's configured sync mailboxes (default: INBOX):
 
 ```bash
 weavmail sync
@@ -18,7 +18,7 @@ weavmail sync
 
 ## Step 2: Report to the user
 
-Read the synced `.md` files under `mails/` and summarize all emails currently in INBOX for each account. For each email, report at minimum:
+Read the synced `.md` files under `mails/` and summarize all synced emails for each account (from configured sync mailboxes, default INBOX). For each email, report at minimum:
 
 - Account name
 - UID (file name)
@@ -37,7 +37,7 @@ Example summary format:
 - 67890.md | From: boss@work.com | Subject: Meeting | Date: 01 Jan 2026 15:00:00 +0000
 ```
 
-If there are no emails in INBOX, report that all inboxes are empty and stop.
+If there are no synced emails, report that all sync folders are empty and stop.
 
 ---
 

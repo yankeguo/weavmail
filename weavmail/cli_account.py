@@ -85,6 +85,11 @@ def account_list():
     default=None,
     help="Archive mailbox name, e.g. 'Archive' or '[Gmail]/All Mail'",
 )
+@click.option(
+    "--sync-mailboxes",
+    default=None,
+    help="Comma-separated list of mailboxes to sync by default, e.g. INBOX,Spam",
+)
 def account_config(
     name,
     imap_host,
@@ -101,6 +106,7 @@ def account_config(
     sent_mailbox,
     trash_mailbox,
     archive_mailbox,
+    sync_mailboxes,
 ):
     """Create or update an account configuration.
 
@@ -156,6 +162,10 @@ def account_config(
         data["trash_mailbox"] = trash_mailbox
     if archive_mailbox is not None:
         data["archive_mailbox"] = archive_mailbox
+    if sync_mailboxes is not None:
+        data["sync_mailboxes"] = [
+            s.strip() for s in sync_mailboxes.split(",") if s.strip()
+        ]
 
     accounts[name] = data
     save_accounts(accounts)
