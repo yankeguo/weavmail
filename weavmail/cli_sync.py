@@ -5,7 +5,13 @@ import yaml
 from imap_tools import MailBox, MailMessageFlags
 
 from .cli import cli
-from .config import IMAP_REQUIRED, load_account, load_accounts, require_account_fields, safe_dirname
+from .config import (
+    IMAP_REQUIRED,
+    load_account,
+    load_accounts,
+    require_account_fields,
+    safe_dirname,
+)
 
 _OPTIONAL_MAILBOXES = ("sent_mailbox", "trash_mailbox", "archive_mailbox")
 
@@ -49,10 +55,12 @@ def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
             if message_id:
                 front["message_id"] = message_id[0]
             yaml_block = yaml.dump(front, allow_unicode=True, sort_keys=False).rstrip()
-            body = msg.text or msg.html or ""
+            body = (
+                (msg.text or msg.html or "").replace("\r\n", "\n").replace("\r", "\n")
+            )
 
             content = f"---\n{yaml_block}\n---\n\n{body.strip()}\n"
-            out_file.write_text(content, encoding="utf-8")
+            out_file.write_text(content, encoding="utf-8", newline="\n")
             mb.flag([uid], [MailMessageFlags.SEEN], True)
             click.echo(
                 f"[mail saved]\n"
@@ -96,9 +104,7 @@ def sync(limit: int):
         for mb in mailboxes:
             sync_mailbox(acct, mb, limit)
         missing_mailboxes = [
-            f"--{f.replace('_', '-')}"
-            for f in _OPTIONAL_MAILBOXES
-            if not data.get(f)
+            f"--{f.replace('_', '-')}" for f in _OPTIONAL_MAILBOXES if not data.get(f)
         ]
         if missing_mailboxes:
             click.echo(

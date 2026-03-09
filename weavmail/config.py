@@ -79,7 +79,7 @@ def save_accounts(accounts: dict[str, Any]) -> None:
 
     fd, tmp_path = tempfile.mkstemp(dir=config_dir, suffix=".tmp")
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
             json.dump(accounts, f, indent=2, ensure_ascii=False)
             f.write("\n")
         os.replace(tmp_path, config_path)
