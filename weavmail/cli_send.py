@@ -45,9 +45,7 @@ def _reply_subject(subject: str) -> str:
     default=None,
     help="Sender address (defaults to first configured address)",
 )
-@click.option(
-    "--to", "to_addrs", multiple=True, help="Recipient address(es), repeatable"
-)
+@click.option("--to", "to_addrs", multiple=True, help="Recipient address(es), repeatable")
 @click.option("--cc", "cc_addrs", multiple=True, help="CC address(es), repeatable")
 @click.option("--bcc", "bcc_addrs", multiple=True, help="BCC address(es), repeatable")
 @click.option("--subject", default=None, help="Mail subject")
@@ -136,9 +134,7 @@ def send(
 
         # Pick from_addr from the original mail's to/cc if it matches a configured address
         if from_addr == configured_addresses[0]:
-            for addr in list(reply_front.get("to") or []) + list(
-                reply_front.get("cc") or []
-            ):
+            for addr in list(reply_front.get("to") or []) + list(reply_front.get("cc") or []):
                 if addr in configured_addresses:
                     from_addr = addr
                     break
@@ -158,9 +154,7 @@ def send(
         click.echo("Error: at least one --to address is required.", err=True)
         raise SystemExit(1)
     if not subject:
-        click.echo(
-            "Error: --subject is required (or use --reply to infer it).", err=True
-        )
+        click.echo("Error: --subject is required (or use --reply to infer it).", err=True)
         raise SystemExit(1)
 
     # Compose final body
@@ -214,7 +208,5 @@ def send(
         with MailBox(data["imap_host"], port=data["imap_port"]).login(
             data["imap_username"], data["imap_password"], initial_folder=None
         ) as mb:
-            mb.append(
-                msg.as_bytes(), target_sent, flag_set=[MailMessageFlags.SEEN]
-            )
+            mb.append(msg.as_bytes(), target_sent, flag_set=[MailMessageFlags.SEEN])
         click.echo(f"[mail saved to sent]\n  mailbox: {target_sent}\n")

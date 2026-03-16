@@ -41,9 +41,7 @@ def account_list():
     help=f"IMAP server port (default {IMAP_DEFAULT_PORT} on first creation)",
 )
 @click.option("--imap-username", default=None, help="IMAP login username")
-@click.option(
-    "--imap-password", default=None, help="IMAP login password or app password"
-)
+@click.option("--imap-password", default=None, help="IMAP login password or app password")
 @click.option("--smtp-host", default=None, help="SMTP server hostname")
 @click.option(
     "--smtp-port",
@@ -52,9 +50,7 @@ def account_list():
     help=f"SMTP server port (default {SMTP_DEFAULT_PORT} on first creation)",
 )
 @click.option("--smtp-username", default=None, help="SMTP login username")
-@click.option(
-    "--smtp-password", default=None, help="SMTP login password or app password"
-)
+@click.option("--smtp-password", default=None, help="SMTP login password or app password")
 @click.option(
     "--username",
     default=None,
@@ -163,20 +159,18 @@ def account_config(
     if archive_mailbox is not None:
         data["archive_mailbox"] = archive_mailbox
     if sync_mailboxes is not None:
-        data["sync_mailboxes"] = [
-            s.strip() for s in sync_mailboxes.split(",") if s.strip()
-        ]
+        data["sync_mailboxes"] = [s.strip() for s in sync_mailboxes.split(",") if s.strip()]
 
     accounts[name] = data
     save_accounts(accounts)
     click.echo(f"Account '{name}' saved.")
 
     # Print current configuration (mask passwords)
-    _MASKED = {"imap_password", "smtp_password"}
+    _masked = {"imap_password", "smtp_password"}
     for key, value in data.items():
         if value is None:
             continue
-        display = "********" if key in _MASKED else value
+        display = "********" if key in _masked else value
         click.echo(f"  {key}: {display}")
 
     absent = missing_params(data)

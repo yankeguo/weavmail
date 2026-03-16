@@ -61,8 +61,7 @@ def load_accounts() -> dict[str, Any]:
             return json.load(f)
     except json.JSONDecodeError as exc:
         raise SystemExit(
-            f"Error: {config_path} contains invalid JSON and may be corrupted.\n"
-            f"Details: {exc}"
+            f"Error: {config_path} contains invalid JSON and may be corrupted.\nDetails: {exc}"
         )
 
 

@@ -3,8 +3,6 @@ Tests for account management commands and config storage.
 """
 
 import json
-import os
-import sys
 
 import pytest
 from click.testing import CliRunner
@@ -12,12 +10,9 @@ from click.testing import CliRunner
 from weavmail.cli import cli
 from weavmail.config import (
     ACCOUNT_PARAMS,
-    ensure_config_dir,
-    get_config_path,
     load_accounts,
     save_accounts,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -236,6 +231,5 @@ def test_invalid_json_handling(tmp_path, monkeypatch):
         load_accounts()
 
     assert (
-        "invalid JSON" in str(exc_info.value).lower()
-        or "corrupted" in str(exc_info.value).lower()
+        "invalid JSON" in str(exc_info.value).lower() or "corrupted" in str(exc_info.value).lower()
     )

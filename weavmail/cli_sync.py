@@ -55,9 +55,7 @@ def sync_mailbox(account: str, mailbox_name: str, limit: int) -> None:
             if message_id:
                 front["message_id"] = message_id[0]
             yaml_block = yaml.dump(front, allow_unicode=True, sort_keys=False).rstrip()
-            body = (
-                (msg.text or msg.html or "").replace("\r\n", "\n").replace("\r", "\n")
-            )
+            body = (msg.text or msg.html or "").replace("\r\n", "\n").replace("\r", "\n")
 
             content = f"---\n{yaml_block}\n---\n\n{body.strip()}\n"
             out_file.write_text(content, encoding="utf-8", newline="\n")
